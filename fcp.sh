@@ -1,6 +1,6 @@
 nc=2
 echo -e "\e[1;33mAll Download Script ClassPlus server app\e[0m"
-token="eyJhbGciOiJIUzM4NCIsInR5cCI6IkpXVCJ9.eyJpZCI6NDU3ODE5NDAsIm9yZ0lkIjoxNjc0LCJ0eXBlIjoxLCJtb2JpbGUiOiI5MTk4ODU1MTA3NzAiLCJuYW1lIjoiU3Jpa2FudGgiLCJlbWFpbCI6InNyaWthbnRoc3Bpa2U4NjFAZ21haWwuY29tIiwiaXNJbnRlcm5hdGlvbmFsIjowLCJkZWZhdWx0TGFuZ3VhZ2UiOiJlbiIsImNvdW50cnlDb2RlIjoiSU4iLCJjb3VudHJ5SVNPIjoiOTEiLCJ0aW1lem9uZSI6IkdNVCs1OjMwIiwiaXNEaXkiOmZhbHNlLCJpYXQiOjE2NTc2MTQ5MjIsImV4cCI6MTY1ODIxOTcyMn0.q54YKm2J6dAyfyBrFWv1UP9vWM-pKnw2ihjVpOjs8XYyj3_JTmZMtiCWrgtkUOe0"
+token=""
 read -p "Do you want to Download whole batch(y/n): " w
 case "$w" in
   "y" | "Y" )
