@@ -1,25 +1,49 @@
 nc=2
 echo -e "\e[1;33mAll Download Script ClassPlus server app\e[0m"
-token=""
+#read -p "Token: " token
+token="eyJhbGciOiJIUzM4NCIsInR5cCI6IkpXVCJ9.eyJpZCI6MTI4MjQxNTksIm9yZ0lkIjo0MTc1LCJ0eXBlIjoxLCJtb2JpbGUiOiI5MTk4ODU1MTA3NzAiLCJuYW1lIjoiU3Jpa2FudGgiLCJlbWFpbCI6InNyaWthbnRoY2hhbmRyYWdpcmkwMzdAZ21haWwuY29tIiwiaXNJbnRlcm5hdGlvbmFsIjowLCJkZWZhdWx0TGFuZ3VhZ2UiOiJFTiIsImNvdW50cnlDb2RlIjoiSU4iLCJjb3VudHJ5SVNPIjoiOTEiLCJ0aW1lem9uZSI6IkdNVCs1OjMwIiwiaXNEaXkiOmZhbHNlLCJmaW5nZXJwcmludElkIjoiNDAxZDVhMjkxNGVlYWZiMDMwNDNlOTM3MDhlYjhlNTAiLCJpYXQiOjE2ODYyMzM3NjgsImV4cCI6MTY4NjgzODU2OH0.rVNenKHtbIk8I24IYHcUlit1nYFwGTcqLMFAdWiV25eAIE58sLVewH5PPrfTgdTX"
 read -p "Do you want to Download whole batch(y/n): " w
 case "$w" in
   "y" | "Y" )
      read -p "Enter Course Id: " crs
-     read -p "Enter  Resolution Quality: " r
+     crs=${crs:-0}
+     read -p "Enter  Resolution Quality(>=240p): " r
+     r=${r:-240p}
      read -p "Enter Folder Name: " dname
-     curl -sS-X GET -H "Api-Version: 22" -H "Host:api.classplusapp.com" -H "x-access-token:$token" -H "mobile-agent: Mobile-Android" "https://api.classplusapp.com/v2/course/content/get?courseId=$crs" > mfolderid.json
-     cat mfolderid.json | jq '.data.courseContent[] | select(.contentType == 2)' | jq '. | select(.isLocked == 0)' | jq -r '.|.name,.url' > tmp.txt
-     cat mfolderid.json | jq '.data.courseContent[] | select(.contentType == 1)' | jq -r '.|.name,.id' > fn.txt
+     dname=${dname:-CLASSPLUS}
+     curl -sS -X GET -H "Api-Version: 35" -H "Host:api.classplusapp.com" -H "x-access-token:$token" -H "mobile-agent: Mobile-Android" "https://api.classplusapp.com/v2/course/content/get?courseId=$crs&folderId=0" > mfolderid.json
+     fl=$(cat mfolderid.json | jq -r '.status')
+     if [ "$fl" == "failure" ]
+     then
+      echo "Error"
+      exit
+     fi
+     cat mfolderid.json | jq -r '.data.courseContent[] | select(.contentType == 2)' | jq '. | select(.isLocked == 0)' | jq -r '.|.name,.url' > tmp.txt
+     cat mfolderid.json | jq -r '.data.courseContent[] | select(.contentType == 1)' | jq -r '.|.name,.id' > fn.txt
      ;;
   "n" | "N" )
      read -p "Enter Course Id: " crs
+     crs=${crs:-0}
      read -p "Enter Folder Id: " xxx
-     read -p "Enter  Resolution Quality: " r
+     xxx=${xxx:-0}
+     read -p "Enter  Resolution Quality(>=240p): " r
+     r=${r:-0}
      read -p "Enter Folder Name: " dname
-     curl -sS -X GET -H "Api-Version: 22" -H "Host:api.classplusapp.com" -H "x-access-token:$token" -H "mobile-agent: Mobile-Android" "https://api.classplusapp.com/v2/course/content/get?courseId=$crs&folderId=$xxx" > mfolderid.json
-     cat mfolderid.json | jq '.data.courseContent[] | select(.contentType == 2)' | jq '. | select(.isLocked == 0)' | jq -r '.|.name,.url' > tmp.txt
-     cat mfolderid.json | jq '.data.courseContent[] | select(.contentType == 1)' | jq -r '.|.name,.id' > fn.txt
+     dname=${dname:-CLASSPLUS}
+     curl -sS -X GET -H "Api-Version: 35" -H "Host:api.classplusapp.com" -H "x-access-token:$token" -H "mobile-agent: Mobile-Android" "https://api.classplusapp.com/v2/course/content/get?courseId=$crs&folderId=$xxx" > mfolderid.json
+     fl=$(cat mfolderid.json | jq -r '.status')
+     echo
+     if [ "$fl" == "failure" ]
+     then
+      echo "Error"
+      exit
+     fi
+     cat mfolderid.json | jq -r '.data.courseContent[] | select(.contentType == 2)' | jq '. | select(.isLocked == 0)' | jq -r '.|.name,.url' > tmp.txt
+     cat mfolderid.json | jq -r '.data.courseContent[] | select(.contentType == 1)' | jq -r '.|.name,.id' > fn.txt
      ;;
+  *)
+     echo "Select Y or N"
+     exit
 esac
 find ./$crs -name "*.json" > zzz.txt
 xargs rm -rf < zzz.txt
@@ -44,14 +68,33 @@ else
     j=$(($i+$w))p
     url=$(sed -n $j tmp.txt)
     name=$(sed -n $nm tmp.txt | sed -e 's/[[:punct:]]/_/g' | tr '_' ' ' | xargs | sed 's/ /_/g')
-    furl=$(curl -sS -X GET -H "Api-Version: 22" -H "Host:api.classplusapp.com" -H "x-access-token:$token" -H "mobile-agent: Mobile-Android" "https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url=$url" | jq -r '.url')
-    if [ "$furl" == "null" ]
+    curl -sS -X GET -H "Api-Version: 22" -H "Host:api.classplusapp.com" -H "x-access-token:$token" -H "mobile-agent: Mobile-Android" "https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url=$url" > link.json
+    furl=$(cat link.json | jq -r '.url')
+    if [ "$furl" == "null" ] || [ "$furl" == "" ];
     then
-     echo -e "\e[1;31mSkipping, Video is Not Downlodable: \e[1;36m$name\e[0m"
+    echo -e "\e[1;31mSkipping, Video is Not Downloadable: \e[1;36m$name\e[0m"
+     drmc=$(cat link.json | jq -r '.drmUrls.manifestUrl')
+     if [ "$drmc" == "null" ]
+     then
+      echo
+     else
+      echo
+      echo "DRM Video Data:"
+      echo
+      cat link.json | jq -r '.drmUrls|"mpd link","----",.manifestUrl,"\n","licns Url","----",.licenseUrl'
+      mkdir -p $crs
+      echo $name >> $crs/drm.txt
+      cat link.json | jq -r '.drmUrls|"mpd link","----",.manifestUrl,"\n","licns Url","----",.licenseUrl,"\n\n"' >> $crs/drm.txt
+    fi
     else
      echo $name
      echo $furl
-     yt-dlp -S "res:$r" -N 5 --no-check-certificate -S "res:$r" -o "$crs/$name.mp4" "$furl"
+     #yt-dlp -N 5 -S "res:$r" --no-check-certificate -S "res:$r" -o "$crs/$name.mp4" "$furl"
+     streamlink --stream-sorting-excludes ">$r" --stream-segment-threads 5 "$furl" best -o "$crs/$name.hls" --force-progress
+     echo 
+     echo "Converting HLS to MP4 ---------->"
+     ffpb -i "$crs/$name.hls" -c:v copy -bsf:a aac_adtstoasc "$crs/$name.mp4"
+     rm -rf "$crs/$name.hls"
      echo ""
     fi
     count=$(($count+$w))
@@ -87,8 +130,20 @@ else
     count1=$(($count1+$w))
  done
 fi
-rs=99
+find ./$crs -name "*.json" > tmp0.txt
+rs=$(cat tmp0.txt | wc -l)
+if [ $rs -ne 0 ]
+then
+  rs=99
+else
+  rs=0
+fi
 until [ $rs -eq 0 ]; do
+ echo "test"
+ #if [ $rs -eq 0 ]
+ #then
+ # break
+ #fi
  find ./$crs -name "*.json" > tmp0.txt
  endx=$(cat tmp0.txt |wc -l)
  st2=1
@@ -119,16 +174,36 @@ until [ $rs -eq 0 ]; do
     j=$(($i+$w))p
     url=$(sed -n $j tmpx.txt)
     name=$(sed -n $nm tmpx.txt | sed -e 's/[[:punct:]]/_/g' | tr '_' ' ' | xargs | sed 's/ /_/g')
-    furl=$(curl -sS -X GET -H "Api-Version: 22" -H "Host:api.classplusapp.com" -H "x-access-token:$token" -H "mobile-agent: Mobile-Android" "https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url=$url" | jq -r '.url')
-    if [ "$furl" == "null" ]
+    curl -sS -X GET -H "Api-Version: 22" -H "Host:api.classplusapp.com" -H "x-access-token:$token" -H "mobile-agent: Mobile-Android" "https://api.classplusapp.com/cams/uploader/video/jw-signed-url?url=$url" > link.json
+    furl=$(cat link.json | jq -r '.url')
+    if [ "$furl" == "null" ] || [ "$furl" == "" ];
     then
      echo -e "\e[1;31mSkipping, Video is Not Downloadable: \e[1;36m$name\e[0m"
+     drmc=$(cat link.json | jq -r '.drmUrls.manifestUrl')
+     if [ "$drmc" == "null" ]
+     then
+      echo
+     else
+      echo
+      echo "DRM Video Data:"
+      echo
+      cat link.json | jq -r '.drmUrls|"mpd link","----",.manifestUrl,"\n","licns Url","----",.licenseUrl'
+      fname2=$(echo ${fname%/*})
+      mkdir -p $fname2
+      echo $name >> $fname2/drm.txt
+      cat link.json | jq -r '.drmUrls|"mpd link","----",.manifestUrl,"\n","licns Url","----",.licenseUrl,"\n\n"' >> $fname2/drm.txt
+    fi
     else
      echo $fname
      fname2=$(echo ${fname%/*})
      echo $fname2
      echo $furl
-     yt-dlp -S "res:$r" -N 5 --no-check-certificate -S "res:$r" -o "$fname2/$name.mp4" "$furl"
+     #yt-dlp -N 5 -S "res:$r" --no-check-certificate -S "res:$r" -o "$fname2/$name.mp4" "$furl"
+     streamlink --stream-sorting-excludes ">$r" --stream-segment-threads 5 "$furl" best -o "$fname2/$name.hls" --force-progress
+     echo
+     echo "Converting HLS to MP4 ---------->"
+     ffpb -i "$fname2/$name.hls" -c:v copy -bsf:a aac_adtstoasc "$fname2/$name.mp4"
+     rm -rf "$fname2/$name.hls"
      echo ""
     fi
     count=$(($count+$w))
@@ -180,3 +255,4 @@ rm -rv tmp.txt
 rm -rf tmp0.txt
 rm -rf tmpx.txt
 rm -rf fnx.txt
+rm -rf link.json
